@@ -28,15 +28,12 @@ module Greed
 			die = pair[0]
 			count = pair[1]
 			if count >= 3
-				s = die == 1 ? 1000 : die * 100
-				s = s * (count - 1)
-				score = score + s
+				score + (die == 1 ? 1000 : die * 100) * (count - 2)
 			elsif die == 5
-				score = score + 50 * count
+				score + 50 * count
 			elsif die == 1
-				score = score + 100 * count
+				score + 100 * count
 			end
-			score
 		end
 	end
 
@@ -123,5 +120,43 @@ module Greed
 
 
 		choices
+	end
+
+
+	# given an array of ([choice], value) tuples, returns an array with objectively poorer choices removed
+	# for a given amount of dice used up, only keeps the choice that gets the highest score
+	# for example: you could keep a 1 or you could keep a 5.  If you want to keep just one die, which one do you choose?
+	def filter_choices(choices)
+		# put them in a hash with key == die count and value == array of choice tuples
+		by_die_count = choices.inject({}) do |by_die_count, choice_tuple|
+			choice = choice_tuple[0]
+			cnt = choice.length
+			by_die_count[cnt] ||= []
+			by_die_count[cnt] << choice_tuple
+			by_die_count
+		end
+
+		# take only the highest-value choice for each die count
+		by_die_count.inject([]) do |filtered, pair|
+			die_count = pair[0]
+			choices = pair[1]
+			filtered << choices.sort do |a, b|
+				b[1] <=> a[1]
+			end.first
+			filtered
+		end
+	end
+
+
+	def probability_of_not_busting(dice_count, num_trials = 10000)
+		successes = 0
+		num_trials.times do
+			dice = roll(dice_count)
+			choices = choices(dice)
+			if choices.length > 0
+				successes = successes + 1.0
+			end
+		end
+		successes / num_trials
 	end
 end
