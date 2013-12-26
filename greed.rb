@@ -148,7 +148,14 @@ module Greed
 	end
 
 
-	def probability_of_not_busting(dice_count, num_trials = 10000)
+	def probability_of_not_busting(dice_count, num_trials = 10000, recalculate = false)
+		@cached_probabilities ||= {}
+
+		# return cached value
+		if @cached_probabilities[dice_count] && !recalculate
+			return @cached_probabilities[dice_count]
+		end
+
 		successes = 0
 		num_trials.times do
 			dice = roll(dice_count)
@@ -157,6 +164,6 @@ module Greed
 				successes = successes + 1.0
 			end
 		end
-		successes / num_trials
+		@cached_probabilities[dice_count] = successes / num_trials
 	end
 end
