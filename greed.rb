@@ -1,5 +1,3 @@
-require 'pry'
-
 
 module Greed
 	STRAIGHT_VALUE = 1000
