@@ -8,7 +8,7 @@ module Greed
 
 	# given a number +n+ of dice to roll, returns an array of 'dice'
 	def roll(n)
-		n.times.map { 1 + rand(5) }
+		n.times.map { 1 + rand(6) }
 	end
 
 
