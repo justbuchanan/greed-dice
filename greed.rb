@@ -162,4 +162,109 @@ module Greed
 		end
 		@cached_probabilities[dice_count] = successes / num_trials
 	end
+
+
+
+	class Game
+		MAX_SCORE = 10000	# play to 10,000
+		MIN_SCORE = 500		# you have to get 500 to get on the board
+
+		# a 'player' is a lambda that takes in:
+		# * player_id - int # index into players array
+		# * scores - [int]
+		# * choices - [[int], int] # the available choices
+		# * round_running_total - int
+		#
+		# and returns the dice chosen to keep, and a bool for whether or not to roll again
+		def initialize(players)
+			@players = players
+			reset()
+		end
+
+
+		def reset()
+			@scores = [0] * @players.length # everyone starts out at zero
+			@first_threshold_breaker = nil
+		end
+
+
+		# TODO: add rule where player can resume previous player's dice
+		def run()
+			puts "Greed!"
+			puts "=" * 10
+			puts ""
+
+			player_id = 0
+			while true
+				# see if the game's over
+				if player_id == @first_threshold_breaker
+					puts "Game Over!"
+					puts "Final rankings: #{self.rankings}"
+					puts "-"  * 10
+					break
+				end
+
+				puts "Player #{player_id}"
+				puts "-" * 10
+
+				dice_count = 6
+				running_score = 0
+				while true
+					dice = roll(dice_count)
+					choices = choices(dice)
+					puts "Dice: #{dice}"
+
+					if choices.length == 0
+						puts "Busted! :("
+						break
+					end
+
+					choice, roll_again = @players[player_id].call(player_id, @scores, choices, running_score)
+
+					if !choices.include? choice
+						puts "Cheater!"
+						raise StandardError, "Player chose an invalid option..."
+					end
+
+					running_score += choice[1]
+
+					puts "Chose #{choice[0]} for #{choice[1]} pts, running points #{running_score}"
+
+					dice_count -= choice[0].length
+					if dice_count == 0
+						dice_count = 6
+						puts "Used all the dice!"
+					end
+					
+					if !roll_again
+						if running_score < MIN_SCORE && @scores[player_id] == 0
+							puts "Not enough to get on the board..."
+						else
+							@scores[player_id] += running_score
+						end
+						break
+					end
+					puts "Roll again..."
+				end
+
+				puts "New Score: #{@scores[player_id]}"
+
+				if @scores[player_id] >= MAX_SCORE && @first_threshold_breaker.nil?
+					puts "Crossed the win threshold!  Game will end after everyone else goes once more"
+					@first_threshold_breaker = player_id
+				end
+
+				# next player
+				player_id = (player_id + 1) % @players.length
+				puts ""
+			end
+		end
+
+		# returns the player_ids ordered in descending order by score
+		def rankings
+			zipped = (0..@scores.length-1).to_a.zip @scores
+			zipped.sort! { |a, b| b[1] <=> a[1] }
+			zipped.map { |pair| pair[0] }
+		end
+	end
 end
