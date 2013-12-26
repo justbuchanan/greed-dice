@@ -22,9 +22,22 @@ module Greed
 	end
 
 
+	# NOTE: doesn't handle straights or 3 of a kind!
 	def evaluate_dice(dice)
-		#FIXME: implement
-		return -1
+		counts(dice).inject(0) do |score, pair|
+			die = pair[0]
+			count = pair[1]
+			if count >= 3
+				s = die == 1 ? 1000 : die * 100
+				s = s * (count - 1)
+				score = score + s
+			elsif die == 5
+				score = score + 50 * count
+			elsif die == 1
+				score = score + 100 * count
+			end
+			score
+		end
 	end
 
 
@@ -79,13 +92,13 @@ module Greed
 		# advances to the next combination
 		# returns false if it was unable to get a new combination
 		tumble = lambda do
-			for index in (choices_by_index.length-1..0)
+			(0..choices_by_index.length-1).reverse_each do |index|
 				if choices_by_index[index] < options_by_index[index].length - 1
-					++choices_by_index[index]
+					choices_by_index[index] = choices_by_index[index] + 1
 
 					# reset all choices after the one just tumbled
-					for index in (index+1..choices_by_index.length)
-						choices_by_index[index] = 0;
+					for index in (index+1..choices_by_index.length-1)
+						choices_by_index[index] = 0
 					end
 					return true
 				end
@@ -97,7 +110,7 @@ module Greed
 		# builds the choice from
 		extract = lambda do
 			choice = []
-			(0..choices_by_index.length).each do |i|
+			(0..choices_by_index.length-1).each do |i|
 				choice += [ counts.keys[i] ] * options_by_index[i][ choices_by_index[i] ]
 			end
 			[choice, evaluate_dice(choice)]
@@ -105,7 +118,6 @@ module Greed
 
 		# add the choice to the set of possible
 		while tumble.call()
-			p "tumble!"
 			choices << extract.call()
 		end
 
