@@ -158,9 +158,7 @@ module Greed
 
 		successes = 0
 		num_trials.times do
-			dice = roll(dice_count)
-			choices = choices(dice)
-			if choices.length > 0
+			if choices(roll(dice_count)).length > 0
 				successes = successes + 1.0
 			end
 		end
