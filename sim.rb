@@ -11,10 +11,19 @@ player = lambda do |player_id, scores, choices, round_running_total|
 end
 
 
-game = Game.new([
-	player,
-	player,
-	player
-])
+wins = {}
 
-game.run()
+for i in (0..10000) do
+	game = Game.new([
+		player,
+		player,
+		player
+	])
+	game.run()
+
+	winner = game.rankings[0]
+	wins[winner] ||= 0
+	wins[winner]++
+end
+
+puts "wins: #{wins}"
